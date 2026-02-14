@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel - NaughtyNet</title>
+
+  <style>
+    body{
+      background:black;
+      color:white;
+      font-family:sans-serif;
+      text-align:center;
+    }
+
+    .card{
+      background:#111;
+      margin:20px;
+      padding:20px;
+      border-radius:15px;
+      box-shadow:0 0 20px hotpink;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🔥 VIP Requests (Admin) 🔥</h2>
+<div id="requests"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAnOAwEAxSwF5EPIlJdS7fMkQAiHmdLzzw",
+  authDomain: "naughtynet-603c7.firebaseapp.com",
+  projectId: "naughtynet-603c7",
+  storageBucket: "naughtynet-603c7.firebasestorage.app",
+  messagingSenderId: "431492467825",
+  appId: "1:431492467825:web:8eb274687947e04e27dfd0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async(user)=>{
+
+  if(!user){
+    window.location.href="index.html";
+    return;
+  }
+
+  if(user.email !== "aslamonline4590@gmail.com"){
+    alert("Access Denied");
+    window.location.href="dashboard.html";
+    return;
+  }
+
+  loadRequests();
+
+});
+
+async function loadRequests(){
+
+  const querySnapshot = await getDocs(collection(db,"vipRequests"));
+  const container = document.getElementById("requests");
+  container.innerHTML="";
+
+  querySnapshot.forEach(async(docSnap)=>{
+
+    const data = docSnap.data();
+
+    if(data.status === "pending"){
+
+      let months = 1;
+
+      if(data.plan?.includes("3")) months=3;
+      if(data.plan?.includes("6")) months=6;
+      if(data.plan?.includes("1 Year")) months=12;
+      if(data.plan?.includes("2 Years")) months=24;
+
+      let expiry = new Date();
+      expiry.setMonth(expiry.getMonth()+months);
+
+      await updateDoc(doc(db,"users",data.userId),{
+        vip:true,
+        vipExpiry: expiry
+      });
+
+      await updateDoc(doc(db,"vipRequests",docSnap.id),{
+        status:"approved"
+      });
+
+      container.innerHTML += `
+        <div class="card">
+          <p>✅ Approved: ${data.email}</p>
+          <p>Plan: ${data.plan}</p>
+        </div>
+      `;
+    }
+
+  });
+
+}
+
+</script>
+</body>
+</html>
