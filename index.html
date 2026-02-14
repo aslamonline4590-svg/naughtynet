@@ -7,83 +7,89 @@
 
 <style>
 body{
-  margin:0;
-  background:black;
-  font-family:Arial;
-  overflow-y:scroll;
-  scroll-snap-type:y mandatory;
+margin:0;
+background:black;
+font-family:Arial;
+overflow-y:scroll;
+scroll-snap-type:y mandatory;
 }
 
 .video-box{
-  height:100vh;
-  position:relative;
-  scroll-snap-align:start;
+height:100vh;
+position:relative;
+scroll-snap-align:start;
 }
 
 video{
-  width:100%;
-  height:100vh;
-  object-fit:cover;
+width:100%;
+height:100vh;
+object-fit:cover;
 }
 
 .overlay{
-  position:absolute;
-  bottom:80px;
-  left:20px;
-  color:white;
+position:absolute;
+bottom:80px;
+left:20px;
+color:white;
 }
 
 .actions{
-  position:absolute;
-  right:20px;
-  bottom:150px;
-  display:flex;
-  flex-direction:column;
-  gap:20px;
+position:absolute;
+right:20px;
+bottom:150px;
+display:flex;
+flex-direction:column;
+gap:20px;
+align-items:center;
 }
 
 .like-btn{
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  border:none;
-  font-size:22px;
-  background:#ff0066;
-  color:white;
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+font-size:24px;
+background:#ff0066;
+color:white;
+}
+
+.likes{
+color:white;
+font-size:14px;
 }
 
 .big-heart{
-  position:absolute;
-  top:40%;
-  left:45%;
-  font-size:90px;
-  opacity:0;
-  transform:scale(0);
-  transition:0.3s ease;
-  color:red;
+position:absolute;
+top:40%;
+left:45%;
+font-size:100px;
+opacity:0;
+transform:scale(0);
+transition:0.3s ease;
+color:red;
 }
 
 .big-heart.show{
-  opacity:1;
-  transform:scale(1.3);
+opacity:1;
+transform:scale(1.3);
 }
 </style>
-
 </head>
+
 <body>
 
 <div id="feed"></div>
 
-<!-- Firebase CDN (Stable Version) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<!-- Firebase v8 Stable -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAnOAwEAxSwF5EPIlJdS7fMkQAiHmdLzzw",
-  authDomain: "naughtynet-603c7.firebaseapp.com",
-  projectId: "naughtynet-603c7"
+apiKey: "AIzaSyAnOAwEAxSwF5EPI1JdS7fMkQAiHmdLz...",
+authDomain: "naughtynet-603c7.firebaseapp.com",
+projectId: "naughtynet-603c7"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -93,62 +99,63 @@ const feed = document.getElementById("feed");
 
 db.collection("videos").onSnapshot(snapshot => {
 
-  feed.innerHTML = "";
+feed.innerHTML = "";
 
-  snapshot.forEach(doc => {
+snapshot.forEach(doc => {
 
-    const data = doc.data();
+const data = doc.data();
 
-    const box = document.createElement("div");
-    box.className = "video-box";
+const box = document.createElement("div");
+box.className = "video-box";
 
-    box.innerHTML = `
-      <video src="${data.videoURL}" autoplay loop muted></video>
-      <div class="big-heart">❤️</div>
+box.innerHTML = `
+<video src="${data.videoURL}" autoplay muted loop playsinline></video>
 
-      <div class="overlay">
-        <h2>${data.title || "Video"}</h2>
-        ❤️ <span class="likes">${data.likes || 0}</span>
-      </div>
+<div class="big-heart">❤️</div>
 
-      <div class="actions">
-        <button class="like-btn">❤️</button>
-      </div>
-    `;
+<div class="overlay">
+<h3>${data.title || "Video"}</h3>
+</div>
 
-    feed.appendChild(box);
+<div class="actions">
+<button class="like-btn">❤️</button>
+<div class="likes">${data.likes || 0}</div>
+</div>
+`;
 
-    const likeBtn = box.querySelector(".like-btn");
-    const likeText = box.querySelector(".likes");
-    const bigHeart = box.querySelector(".big-heart");
+feed.appendChild(box);
 
-    function likeVideo(){
-      db.collection("videos").doc(doc.id).update({
-        likes: firebase.firestore.FieldValue.increment(1)
-      });
-      likeText.innerText = parseInt(likeText.innerText) + 1;
-    }
+const likeBtn = box.querySelector(".like-btn");
+const likeText = box.querySelector(".likes");
+const bigHeart = box.querySelector(".big-heart");
 
-    likeBtn.onclick = likeVideo;
+function likeVideo(){
+db.collection("videos").doc(doc.id).update({
+likes: firebase.firestore.FieldValue.increment(1)
+});
+likeText.innerText = parseInt(likeText.innerText) + 1;
+}
 
-    let lastTap = 0;
+likeBtn.onclick = likeVideo;
 
-    box.addEventListener("click", function(){
-      const currentTime = new Date().getTime();
-      const tapLength = currentTime - lastTap;
+let lastTap = 0;
 
-      if(tapLength < 300 && tapLength > 0){
-        likeVideo();
-        bigHeart.classList.add("show");
-        setTimeout(()=>{
-          bigHeart.classList.remove("show");
-        },300);
-      }
+box.addEventListener("click", function(){
+const currentTime = new Date().getTime();
+const tapLength = currentTime - lastTap;
 
-      lastTap = currentTime;
-    });
+if(tapLength < 300 && tapLength > 0){
+likeVideo();
+bigHeart.classList.add("show");
+setTimeout(()=>{
+bigHeart.classList.remove("show");
+},300);
+}
 
-  });
+lastTap = currentTime;
+});
+
+});
 
 });
 
